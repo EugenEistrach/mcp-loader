@@ -60,8 +60,6 @@ npx mcp-loader .claude/tool
 
 After changing tools, refresh with `/mcp` in Claude Code or restart Claude Desktop.
 
-Uses bundled Zod v3 for schemas. Custom Zod versions may conflict.
-
 ## License
 
 MIT

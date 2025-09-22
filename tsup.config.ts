@@ -11,5 +11,4 @@ export default defineConfig({
   banner: {
     js: '#!/usr/bin/env node',
   },
-  noExternal: ['zod'], // Bundle Zod to avoid version conflicts
 });

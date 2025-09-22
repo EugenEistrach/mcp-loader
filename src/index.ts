@@ -1,10 +1,10 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { readdir, stat } from "fs/promises";
+import { McpServer } from "@socotra/modelcontextprotocol-sdk/server/mcp.js";
+import { StdioServerTransport } from "@socotra/modelcontextprotocol-sdk/server/stdio.js";
 import { watch } from "fs";
-import { join, resolve, basename } from "path";
+import { readdir, stat } from "fs/promises";
+import { basename, join, resolve } from "path";
 import { pathToFileURL } from "url";
-import { z } from "zod";
+import type { z } from "zod";
 
 // Type for our tool definition
 interface ToolDefinition {
@@ -27,7 +27,9 @@ function isToolDefinition(value: unknown): value is ToolDefinition {
 
 // Configuration
 const toolDir = resolve(process.argv[2] || ".claude/tool");
-const hotReload = process.env.MCP_NO_HOT_RELOAD !== "true" && !process.argv.includes("--no-hot-reload");
+const hotReload =
+	process.env.MCP_NO_HOT_RELOAD !== "true" &&
+	!process.argv.includes("--no-hot-reload");
 
 if (hotReload) {
 	console.error(`Hot reload enabled for ${toolDir}`);
@@ -39,9 +41,11 @@ if (hotReload) {
 const server = new McpServer({
 	name: "mcp-loader",
 	version: "0.1.0",
-	capabilities: hotReload ? {
-		tools: { listChanged: true }
-	} : undefined
+	capabilities: hotReload
+		? {
+				tools: { listChanged: true },
+			}
+		: undefined,
 });
 
 // Track registered tools for cleanup
@@ -53,11 +57,13 @@ function unregisterFileTools(file: string) {
 	const toolNames = registeredTools.get(baseName);
 
 	if (toolNames) {
-		console.error(`Unregistering tools from ${file}: ${Array.from(toolNames).join(", ")}`);
+		console.error(
+			`Unregistering tools from ${file}: ${Array.from(toolNames).join(", ")}`,
+		);
 		// Access the internal _registeredTools object to remove tools
 		// This is a workaround since MCP SDK doesn't provide an unregister method
 		if ((server as any)._registeredTools) {
-			toolNames.forEach(name => {
+			toolNames.forEach((name) => {
 				delete (server as any)._registeredTools[name];
 			});
 		}
@@ -73,7 +79,8 @@ function registerTool(name: string, tool: ToolDefinition, baseName: string) {
 	}
 	registeredTools.get(baseName)!.add(name);
 
-	const schema = tool.args && Object.keys(tool.args).length > 0 ? tool.args : undefined;
+	const schema =
+		tool.args && Object.keys(tool.args).length > 0 ? tool.args : undefined;
 	console.error(`Registering tool: ${name}`);
 
 	if (schema) {
@@ -87,9 +94,10 @@ function registerTool(name: string, tool: ToolDefinition, baseName: string) {
 					content: [
 						{
 							type: "text" as const,
-							text: typeof result === "string"
-								? result
-								: JSON.stringify(result, null, 2),
+							text:
+								typeof result === "string"
+									? result
+									: JSON.stringify(result, null, 2),
 						},
 					],
 				};
@@ -97,23 +105,20 @@ function registerTool(name: string, tool: ToolDefinition, baseName: string) {
 		);
 	} else {
 		// For tools with no args, callback only receives 'extra' parameter
-		server.tool(
-			name,
-			tool.description,
-			async (extra: any) => {
-				const result = await tool.execute({}, extra);
-				return {
-					content: [
-						{
-							type: "text" as const,
-							text: typeof result === "string"
+		server.tool(name, tool.description, async (extra: any) => {
+			const result = await tool.execute({}, extra);
+			return {
+				content: [
+					{
+						type: "text" as const,
+						text:
+							typeof result === "string"
 								? result
 								: JSON.stringify(result, null, 2),
-						},
-					],
-				};
-			},
-		);
+					},
+				],
+			};
+		});
 	}
 }
 
@@ -149,7 +154,7 @@ async function loadToolFile(file: string) {
 			}
 		});
 	} catch (e: any) {
-		if (e.code === 'ENOENT') {
+		if (e.code === "ENOENT") {
 			console.error(`File deleted: ${file}`);
 		} else {
 			console.error(`Failed to load ${file}:`, e.message || e);
@@ -198,7 +203,10 @@ if (hotReload) {
 				console.error("Sending tools/list_changed notification");
 				try {
 					// McpServer exposes the underlying server instance
-					if (server.server && typeof server.server.sendToolListChanged === 'function') {
+					if (
+						server.server &&
+						typeof server.server.sendToolListChanged === "function"
+					) {
 						await server.server.sendToolListChanged();
 					} else {
 						console.error("sendToolListChanged method not available");
@@ -212,7 +220,7 @@ if (hotReload) {
 
 	watch(toolDir, async (eventType, filename) => {
 		console.error(`[File Watcher] Event: ${eventType}, Filename: ${filename}`);
-		if (filename && (filename.endsWith('.ts') || filename.endsWith('.js'))) {
+		if (filename && (filename.endsWith(".ts") || filename.endsWith(".js"))) {
 			console.error(`[File Watcher] Scheduling reload for: ${filename}`);
 			pendingReloads.add(filename);
 			scheduleReload();
@@ -225,4 +233,7 @@ if (hotReload) {
 // Start server
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error(`MCP Loader started (hot reload: ${hotReload ? 'enabled' : 'disabled'})`);
+console.error(
+	`MCP Loader started (hot reload: ${hotReload ? "enabled" : "disabled"})`,
+);
+console.error("File watcher active");
