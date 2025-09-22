@@ -18,8 +18,8 @@ export const add = tool({
 });
 ```
 
+Add to `.mcp.json`:
 ```json
-// .mcp.json
 {
   "mcpServers": {
     "tools": {
@@ -34,8 +34,14 @@ Done. Tools work in Claude.
 
 ## Install
 
+Global install:
 ```bash
 npm install -g mcp-loader
+```
+
+Or as a dev dependency:
+```bash
+npm install --save-dev mcp-loader
 ```
 
 Or just use npx (no install):

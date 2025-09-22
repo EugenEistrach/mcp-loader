@@ -4,9 +4,19 @@
   "description": "Auto-discover and load MCP tools from a directory",
   "type": "module",
   "bin": "./dist/index.js",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/tool.js",
+  "module": "./dist/tool.js",
+  "types": "./dist/tool.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/tool.js",
+      "types": "./dist/tool.d.ts"
+    },
+    "./tool": {
+      "import": "./dist/tool.js",
+      "types": "./dist/tool.d.ts"
+    }
+  },
   "files": ["dist"],
   "scripts": {
     "build": "tsup",
